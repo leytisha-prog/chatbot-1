@@ -4,7 +4,7 @@ from google.cloud import firestore
 from google.oauth2 import service_account
 from datetime import datetime 
 
-st.set_page_config (page_titile="Data Analytics with Python Support", layout="centered")
+st.set_page_config (page_title="Data Analytics with Python Support", layout="centered")
 
 #1. Initialize Firebase Firestore Connection - for logging analytics
 @st.cache_resource
