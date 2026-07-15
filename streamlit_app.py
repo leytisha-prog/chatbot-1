@@ -2,8 +2,7 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Programming for Data Analytics Course Assistant"
-    page_icon="",
-
+    page_icon=":material/code:",
 )
 
 st.title("Programming for Data Analytics Course Assistant")
