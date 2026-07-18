@@ -46,6 +46,9 @@ def get_supabase_client() -> Client:
 
 supabase = get_supabase_client() 
 
+st.write("Supabase URL:", st.secrets["SUPABASE_URL"])
+st.write("Key starts with:", st.secrets["SUPABASE_SECRET_KEY"][:15])
+
 # ------- SYSTEM PROMPT ----------------
 
 CONTROL_SYSTEM_PROMPT = """
