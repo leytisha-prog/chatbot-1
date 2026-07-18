@@ -1,7 +1,9 @@
+import time 
 import uuid
 
 import streamlit as st
 from openai import OpenAI 
+from supabase import Client, create_client 
 
 
 #------ PAGE CONFIGURATION -----------
@@ -34,7 +36,15 @@ def get_openai_client() -> OpenAI:
 
 client = get_openai_client()
 
+@st.cache_resource
+def get_supabase_client() -> Client:
+    """Create and cache one Supabase client."""
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_SECRET_KEY"],
+    )
 
+supabase = get_supabase_client() 
 
 # ------- SYSTEM PROMPT ----------------
 
@@ -115,6 +125,40 @@ def reset_conversation() -> None:
     """Clear messages and create a new anonymous session ID."""
     st.session_state.messages = []
     st.session_state.session_id = str(uuid.uuid4())
+
+def save_chat_log(
+    user_message: str,
+    assistant_message: str,
+    turn_number: int,
+    response_time_ms: int,
+) -> bool:
+    """Save one completed student-assistant exchange to Supabase."""
+
+    log_record = {
+        "participant_id": st.session_state.participant_id,
+        "condition": CHATBOT_CONDITION,
+        "session_id": st.session_state.session_id,
+        "assignment_name": st.session_state.selected_assignment,
+        "turn_number": turn_number,
+        "user_message": user_message,
+        "assistant_message": assistant_message,
+        "model_name": MODEL_NAME,
+        "response_time_ms": response_time_ms
+    }
+
+    try:
+        (
+            supabase
+            .table("chat_logs")
+            .insert(log_record)
+            .execute()
+        )
+
+        return True
+    
+    except Exception as error:
+        print(f"Supabase logging error: {error}")
+        return False
 
 def prepare_conversation_input() -> list[dict]:
     """
@@ -290,6 +334,9 @@ if student_prompt:
 
     # Generate and display the assistant's response.
     with st.chat_message("assistant"):
+
+        response_start_time = time.perf_counter()
+
         try:
             assistant_response = st.write_stream(
                 stream_assistant_response()
@@ -305,6 +352,12 @@ if student_prompt:
             # During development, this appears only in the termina.
             print(f"OpenAI error: {error}")
 
+        response_end_time = time.perf_counter()
+
+        response_time_ms = int(
+            (response_end_time - response_start_time) * 1000
+        )
+
 
         # Save the completed assistant response in session history.
         st.session_state.messages.append(
@@ -313,3 +366,22 @@ if student_prompt:
                 "content": assistant_response,
             }
         )
+    
+        turn_number = sum(
+            1
+            for message in st.session_state.messages
+            if message["role"] == "user"
+        )
+
+        log_saved = save_chat_log(
+            user_message=clean_prompt,
+            assistant_message=assistant_response,
+            turn_number=turn_number,
+            response_time_ms=response_time_ms
+        )
+
+        if not log_saved:
+            st.warning(
+                "Your answer was generated, but the interaction"
+                "could not be saved. Please notify the researcher."
+            )
