@@ -1,6 +1,6 @@
 streamlit
 openai
-supabase
+supabase 
 pypdf
 python-dotenv
 requests
