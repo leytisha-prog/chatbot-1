@@ -27,7 +27,7 @@ class CourseSource:
 APPROVED_SOURCES = [
     CourseSource(
         title="IST 356 Syllabus",
-        url="https://mafudge.github.io/ist356/syllabus.html"
+        url="https://mafudge.github.io/ist356/syllabus.html",
         source_type="syllabus",
         topic="Course policies and requirements",
     ),
@@ -37,7 +37,7 @@ APPROVED_SOURCES = [
             "https://www.tomasbeuzen.com/"
             "python-programming-for-data-science/"
             "chapters/chapter1-basics.html"
-        ), 
+        ),
         source_type="textbook_chapter",
         topic="Python basics",
     ),
@@ -48,11 +48,11 @@ APPROVED_SOURCES = [
             "python-programming-for-data-science/"
             "practice-exercises/chapter1-basics-practice.html"
         ),
-        source_type="textbook_exercise"
+        source_type="textbook_exercise",
         topic="Python basics practice",
         contains_solution=True,
     ),
-] 
+]
 
 
 # ------- CLIENTS --------------------------------------
@@ -198,7 +198,7 @@ def extract_page_sections(html: str) -> list[dict]:
 
 
 # ----- CHUNKING --------------------------------------
-def splir_text(
+def split_text(
     text: str,
     chunk_size: int = CHUNK_SIZE,
     overlap: int = CHUNK_OVERLAP,
