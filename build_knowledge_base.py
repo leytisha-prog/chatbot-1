@@ -65,15 +65,17 @@ def load_secrets() -> dict:
 
 
 def create_clients() -> tuple[OpenAI, Client]:
-    secrets = load_secrets ()
+    secrets = load_secrets()
 
     openai_client = OpenAI (
         api_key=secrets["OPENAI_API_KEY"]
     )
 
+    supabase_settings = secrets["connections"]["supabase"]
+
     supabase_client = create_client(
-        secrets["SUPABASE_URL"],
-        secrets["SUPABASE_SECRET_KEY"],
+        supabase_settings["SUPABASE_URL"],
+        supabase_settings["SUPABASE_SECRET_KEY"],
     )
     
     return openai_client, supabase_client
