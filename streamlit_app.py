@@ -5,7 +5,6 @@ import streamlit as st
 from openai import OpenAI 
 from supabase import Client, create_client 
 
-st.write("Secrets:", st.secrets)
 
 #------ PAGE CONFIGURATION -----------
 
