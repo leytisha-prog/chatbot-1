@@ -172,7 +172,7 @@ Your responsibilities are to:
 6. Help students interpret data-analysis results.
 7. Encourage students to check that the response matches their assignment requirements.
 
-Use language appropriate for students who may be beginners or intermediats
+Use language appropriate for students who may be beginners or intermediates
 in Python.
 
 Do not claim to have accessed course materials unless those materials
@@ -188,7 +188,7 @@ Do not use systematic metacognitive scaffolding. Do not routinely ask students
 to reflect on their thinking, evaluate their confidence, develop a plan, or
 explain their reasoning before receiving assistance. 
 
-Keep responses focuses and usually under 400 words unless the student
+Keep responses focused and usually under 400 words unless the student
 requests more detail.
 """
 
@@ -197,7 +197,7 @@ def get_system_prompt () -> str:
     Return the prompt for the active study condition.
 
     The metacognitive prompt will be added after the control chatbot
-    and shared infrastructur are working reliably.
+    and shared infrastructure are working reliably.
 
     """
     if CHATBOT_CONDITION == "non_metacognitive":
@@ -432,7 +432,7 @@ Hello! I can help you with:
 - interpreting error messages,
 - debugging code,
 - selecting data-analysis methods, and 
-- interpeting analytical results.
+- interpreting analytical results.
 
 What are you working on?
 """
