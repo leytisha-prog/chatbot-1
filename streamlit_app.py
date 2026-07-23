@@ -14,6 +14,11 @@ st.set_page_config(
     layout="centered",
 )
 
+EMBEDDING_MODEL = "text-embedding-3-small"
+RETRIEVAL_COUNT = 5
+RETRIEVAL_THRESHOLD = 0.30
+
+
 
 #------ APPLICATION SETTINGS -----------
 
@@ -27,6 +32,8 @@ MODEL_NAME = st.secrets.get(
     "gpt-4.1-mini",
 )
 
+
+
 # ------ OPENAI CLIENT -------------
 
 @st.cache_resource
@@ -39,12 +46,115 @@ client = get_openai_client()
 @st.cache_resource
 def get_supabase_client() -> Client:
     """Create and cache one Supabase client."""
+
+    supabase_settings = st.secrets["connections"]["supabase"]
+
     return create_client(
-        st.secrets["SUPABASE_URL"],
-        st.secrets["SUPABASE_SECRET_KEY"],
+        supabase_settings["SUPABASE_URL"],
+        supabase_settings["SUPABASE_SECRET_KEY"],
     )
 
 supabase = get_supabase_client() 
+
+def create_question_embedding(
+    question: str,
+    openai_client: OpenAI,    
+) -> list[float]:
+    """
+    Convert the student's question into a numerical embedding.
+    """
+
+    response = openai_client.embeddings.create(
+        model=EMBEDDING_MODEL,
+        input=question,
+    )
+
+    return response.data[0].embedding
+
+
+def retrieve_course_chunks(
+    question: str,
+    openai_client: OpenAI,
+    supabase_client: Client,
+) -> list[dict]:
+    """
+    Retrieve course chunks that are semantically related
+    to the student's question. 
+    """
+
+    question_embedding = create_question_embedding(
+        question=question,
+        openai_client=openai_client,
+    )
+
+    response = supabase_client.rpc(
+        "match_course_chunks",
+        {
+            "query_embedding": question_embedding,
+            "match_count": RETRIEVAL_COUNT,
+            "match_threshold": RETRIEVAL_THRESHOLD,
+        },
+    ).execute()
+
+    return response.data or []
+
+
+
+#---Format the Retrieved Material#
+
+def format_course_context(chunks: list[dict]) -> str:
+    """
+    Format retrieved database chunks for the chatbot prompt.
+    """
+
+    if not chunks:
+        return "No relevant course material was retrieved."
+    
+    context_parts = []
+
+    for number, chunk in enumerate(chunks, start=1):
+        source_title = chunk.get("source_title") or "Course material"
+        section_heading = chunk.get("section_heading") or "Unspecified section"
+        content = chunk.get("content") or ""
+
+        context_parts.append(
+            f"""
+COURSE SOURCE {number}
+Title: {source_title}
+Section: {section_heading}
+Similarity: {chunk.get("similarity", 0):.3f}
+
+Content:
+{content}
+""".strip()
+        )
+    
+    return "\n\n---\n\n".join(context_parts)
+
+
+
+#--- Create a source list for loggins
+def prepare_retrieved_sources(chunks: list[dict]) -> list[dict]:
+    """
+    Create a concise version of the retrieval results
+    for Supabase logging.
+    """
+
+    sources = []
+
+    for chunk in chunks:
+        sources.append(
+            {
+                "chunk_id": chunk.get("id"),
+                "document_id": chunk.get("document_id"),
+                "source_title": chunk.get("source_title"),
+                "source_url": chunk.get("source_url"),
+                "section_heading": chunk.get("section_heading"),
+                "similarity": chunk.get("similarity"),
+            }
+        )
+
+    return sources 
 
 
 # ------- SYSTEM PROMPT ----------------
@@ -128,10 +238,11 @@ def reset_conversation() -> None:
     st.session_state.session_id = str(uuid.uuid4())
 
 def save_chat_log(
-    user_message: str,
-    assistant_message: str,
-    turn_number: int,
-    response_time_ms: int,
+    user_message,
+    assistant_message,
+    turn_number,
+    response_time_ms,
+    retrieved_sources,
 ) -> bool:
     """Save one completed student-assistant exchange to Supabase."""
 
@@ -144,7 +255,8 @@ def save_chat_log(
         "user_message": user_message,
         "assistant_message": assistant_message,
         "model_name": MODEL_NAME,
-        "response_time_ms": response_time_ms
+        "response_time_ms": response_time_ms,
+        "retrieved_sources": retrieved_sources,
     }
 
     try:
@@ -192,14 +304,37 @@ def prepare_conversation_input() -> list[dict]:
     return conversation
 
 
-def stream_assistant_response():
+def stream_assistant_response(course_context: str):
     """Generate and stream an assistant response."""
 
+    rag_instruction = f"""
+Use the retrieved IST 356 course material below when answering
+the student.
+
+Rules:
+1. Prioritize the retrieved course material.
+2. Do not invent course materials, deadlines, or policies.
+3. If the material does not fully answer the question, say so.
+4. Explain the answer at an introductory Python and data analytics level.
+5. For practice exercises, guide the student through the
+   reasoning instead of immediately giving the complete answer.
+
+RETRIEVED COURSE MATERIAL:
+
+{course_context}
+"""
+
+    combined_instructions = (
+        get_system_prompt()
+        + "\n\n"
+        + rag_instruction
+    )
+    
     conversation_input = prepare_conversation_input()
 
     with client.responses.stream(
         model=MODEL_NAME,
-        instructions=get_system_prompt(),
+        instructions=combined_instructions,
         input=conversation_input,
     ) as stream:
         
@@ -333,6 +468,34 @@ if student_prompt:
     with st.chat_message("user"):
         st.markdown(clean_prompt)
 
+    # -------- RETRIEVE RELEVANT COURSE MATERIAL --------------
+
+    try:
+        retrieved_chunks = retrieve_course_chunks(
+            question=clean_prompt,
+            openai_client=client,
+            supabase_client=supabase,
+        )
+
+        course_context = format_course_context(
+            retrieved_chunks
+        )
+
+        retrieved_sources = prepare_retrieved_sources(
+            retrieved_chunks
+        )
+
+    except Exception as error:
+        retrieved_chunks = []
+        retrieved_sources = []
+
+        course_context = (
+            "Course retrieval was temporarily unavailable."
+        )
+
+        print(f"Course retrieval error: {error}")
+
+
     # Generate and display the assistant's response.
     with st.chat_message("assistant"):
 
@@ -340,7 +503,9 @@ if student_prompt:
 
         try:
             assistant_response = st.write_stream(
-                stream_assistant_response()
+                stream_assistant_response(
+                    course_context=course_context
+                )
             )
         except Exception as error:
             assistant_response = (
@@ -378,7 +543,8 @@ if student_prompt:
             user_message=clean_prompt,
             assistant_message=assistant_response,
             turn_number=turn_number,
-            response_time_ms=response_time_ms
+            response_time_ms=response_time_ms,
+            retrieved_sources=retrieved_sources,
         )
 
         if not log_saved:
@@ -386,3 +552,43 @@ if student_prompt:
                 "Your answer was generated, but the interaction"
                 "could not be saved. Please notify the researcher."
             )
+
+        # Display the retrieved sources during development.
+        if retrieved_chunks:
+            with st.expander("Course sources used"):
+
+                for chunk in retrieved_chunks:
+
+                    source_title = (
+                        chunk.get("source_title")
+                        or "Course material"
+                    )
+
+                    section_heading = chunk.get(
+                        "section_heading"
+                    )
+
+                    source_url = chunk.get("source_url")
+
+                    similarity = chunk.get(
+                        "similarity",
+                        0,     
+                    )
+
+                    st.markdown(f"**{source_title}**")
+
+                    if section_heading:
+                        st.caption(
+                            f"Section: {section_heading}"
+                        )
+
+                    st.caption(
+                        f"Similarity score: {similarity:.3f}"
+                    )
+
+                    if source_url:
+                        st.markdown(
+                            f"[Open source page] ({source_url})"
+                        )
+
+                
