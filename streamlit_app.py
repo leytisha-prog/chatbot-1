@@ -5,6 +5,7 @@ import streamlit as st
 from openai import OpenAI 
 from supabase import Client, create_client 
 
+st.write("Secrets:", st.secrets)
 
 #------ PAGE CONFIGURATION -----------
 
@@ -588,7 +589,7 @@ if student_prompt:
 
                     if source_url:
                         st.markdown(
-                            f"[Open source page] ({source_url})"
+                            f"[Open source page]({source_url})"
                         )
 
                 
