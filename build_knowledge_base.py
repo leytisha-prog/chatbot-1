@@ -327,8 +327,8 @@ def insert_chunk(
     
     record = {
         "document_id": document_id,
+        "content": chunk_text,
         "chunk_number": chunk_number,
-        "chunk_text": chunk_text,
         "embedding": embedding,
         "source_title": source.title,
         "source_url": source.url,
