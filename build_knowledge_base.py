@@ -279,7 +279,7 @@ def source_already_exists(
         supabase
         .table("course_documents")
         .select("id")
-        .eq("source_url", sorted)
+        .eq("source_url", source_url)
         .limit(1)
         .execute()
     )
