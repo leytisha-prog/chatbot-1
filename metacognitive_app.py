@@ -9,7 +9,7 @@ from supabase import Client, create_client
 #------ PAGE CONFIGURATION -----------
 
 st.set_page_config(
-    page_title="Programming for Data Analytics Course Assistant",
+    page_title="DOTTIE 1 - Programming for Data Analytics Course Assistant",
     page_icon=";material/icon_code:",
     layout="centered",
 )
