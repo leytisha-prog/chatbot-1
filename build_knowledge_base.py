@@ -24,36 +24,158 @@ class CourseSource:
     topic: str
     contains_solution: bool = False 
 
+TEXTBOOK_BASE_URL = (
+    "https://www.tomasbeuzen.com/"
+    "python-programming-for-data-science"
+)
+
+TEXTBOOK_CHAPTERS = [
+    {
+        "number": 1,
+        "title": "Python Basics",
+        "slug": "chapter1-basics.html",
+        "topic": "Python basics",
+    },
+    {
+        "number": 2,
+        "title": "Loops and Functions",
+        "slug": "chapter2-loops-functions.html",
+        "topic": "Loops, functions, comprehensions, and exceptions",
+    },
+    {
+        "number": 3,
+        "title": "Unit Tests and Classes",
+        "slug": "chapter3-tests-classes.html",
+        "topic": "Unit testing, debugging, and Python classes",
+
+    },
+    {
+        "number": 4,
+        "title": "Style Guides, Scripts, and Imports",
+        "slug": "chapter4-style-scripts-imports.html",
+        "topic": "Python style, scripts, modules, and imports",
+    },
+    {
+        "number": 5,
+        "title": "Introduction to NumPy",
+        "slug": "chapter5-numpy.html",
+        "topic": "Introduction to NumPy",
+    },
+    {
+        "number": 6,
+        "title": "NumPy Implementation Details",
+        "slug": "chapter6-numpy-addendum.html",
+        "topic": "NumPy implementation and advanced details",
+    },
+    {
+        "number": 7,
+        "title": "Introduction to Pandas",
+        "slug": "chapter7-pandas.html",
+        "topic": "Introduction to pandas",
+    },
+    {
+        "number": 8,
+        "title": "Basic Data Wrangling with Pandas",
+        "slug": "chapter8-wrangling-basics.html",
+        "topic": "Basic data wrangling with pandas",
+    },
+    {
+        "number": 9,
+        "title": "Advanced Data Wrangling with Pandas",
+        "slug": "chapter9-wrangling-advanced.html",
+        "topic": "Advanced data wrangling with pandas",
+    },
+
+]
+
+PRACTICE_EXERCISES = [
+    {
+        "chapter": 1,
+        "title": "Phyton Basics Practice Exercises",
+        "slug": "chapter1-basics-practice.html",
+        "topic": "Python basics practice",
+    },
+    {
+        "chapter": 2,
+        "title": "Loops and Funcions Practice Exercises",
+        "slug": "chapter2-loops-functions-practice.html",
+        "topic": "Loops and functions practice",
+    },
+    {
+        "chapter": 3,
+        "title": "Unit Tests and Classes Practice Exercises",
+        "slug": "chapter3-tests-classes-practice.html",
+        "topic": "Unit testing and classes practice",
+    },
+    {
+        "chapter": 4,
+        "title": "Style Guides, Scripts, and Imports Practice Exercises",
+        "slug": "chapter4-style-scripts-imports-practice.html",
+        "topic": "Python style, scripts, and imports practice",
+    },
+    {
+        "chapter": 5,
+        "title": "NumPy Practice Exercises",
+        "slug": "chapter5-numpy-practice.html",
+        "topic": "NumPy practice",
+    },
+    {
+        "chapter": 7,
+        "title": "Pandas Practice Exercises",
+        "slug": "chapter7-pandas-practice.html",
+        "topic": "Pandas practice",
+    },
+    {
+        "chapter": 8,
+        "title": "Basic Data Wrangling Practice Exercises",
+        "slug": "chapter8-wrangling-basics-practice.html",
+        "topic": "Basic pandas data-wrangling practice",
+    },
+]
+
 APPROVED_SOURCES = [
     CourseSource(
         title="IST 356 Syllabus",
         url="https://mafudge.github.io/ist356/syllabus.html",
         source_type="syllabus",
         topic="Course policies and requirements",
-    ),
-    CourseSource(
-        title="Python Programming for Data Science: Python Basics",
-        url=(
-            "https://www.tomasbeuzen.com/"
-            "python-programming-for-data-science/"
-            "chapters/chapter1-basics.html"
-        ),
-        source_type="textbook_chapter",
-        topic="Python basics",
-    ),
-    CourseSource(
-        title="Python Basics Practice Exercises",
-        url=(
-            "https://www.tomasbeuzen.com/"
-            "python-programming-for-data-science/"
-            "practice-exercises/chapter1-basics-practice.html"
-        ),
-        source_type="textbook_exercise",
-        topic="Python basics practice",
-        contains_solution=True,
-    ),
+    )
 ]
 
+# Add all nine textbook chapters
+for chapter in TEXTBOOK_CHAPTERS:
+    APPROVED_SOURCES.append(
+        CourseSource(
+            title=(
+                "Python Programming for Data Science:"
+                f"Chapter {chapter['number']} - {chapter['title']}"
+            ),
+            url=(
+                f"{TEXTBOOK_BASE_URL}/chapters/"
+                f"{chapter['slug']}"
+
+            ),
+            source_type="textbook_chapter",
+            topic=chapter["topic"],
+            contains_solution=False,
+        )
+    )
+
+# Add all available practice-exercise pages
+for practice in PRACTICE_EXERCISES:
+    APPROVED_SOURCES.append(
+        CourseSource(
+            title=practice["title"],
+            url=(
+                f"{TEXTBOOK_BASE_URL}/practice-exercises/"
+                f"{practice['slug']}"
+
+            ),
+            source_type="textbook_exercise",
+            topic=practice["topic"],
+            contains_solution=True,
+        )
+    )
 
 # ------- CLIENTS --------------------------------------
 

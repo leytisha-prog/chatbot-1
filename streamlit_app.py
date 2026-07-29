@@ -476,8 +476,6 @@ if student_prompt:
             openai_client=client,
             supabase_client=supabase,
         )
-        st.write("Retrieved chunks from Supabase:")
-        st.json(retrieved_chunks)
         
         course_context = format_course_context(
             retrieved_chunks
