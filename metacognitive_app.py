@@ -24,7 +24,7 @@ RETRIEVAL_THRESHOLD = 0.30
 
 CHATBOT_CONDITION = st.secrets.get(
     "CHATBOT_CONDITION",
-    "non_metacognitive",
+    "metacognitive",
 )
 
 MODEL_NAME = st.secrets.get(
