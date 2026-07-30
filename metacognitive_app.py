@@ -10,7 +10,7 @@ from supabase import Client, create_client
 
 st.set_page_config(
     page_title="DOTTIE: Programming for Data Analytics Course Assistant",
-    page_icon=":material/icon_name:",
+    page_icon="🤖",
     layout="centered",
 )
 
