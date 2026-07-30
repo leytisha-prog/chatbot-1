@@ -586,7 +586,7 @@ RETRIEVED IST 356 COURSE MATERIAL:
 
 # ----- USER INTERFACE --------------------
 
-st.title("Programming for Data Analytics Learning Assistant")
+st.title("DOTTIE: Your Learning Assistant")
 
 st.caption(
     "Ask questions about Python, data analysis, errors, code,"
