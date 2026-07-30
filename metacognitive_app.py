@@ -33,7 +33,6 @@ MODEL_NAME = st.secrets.get(
 )
 
 
-
 # ------ OPENAI CLIENT -------------
 
 @st.cache_resource
@@ -502,7 +501,6 @@ def prepare_conversation_input() -> list[dict]:
     
     return conversation
 
-
 def stream_assistant_response(course_context: str):
     """Generate and stream a metacognitively scaffolded assistant response."""
 
@@ -589,7 +587,7 @@ RETRIEVED IST 356 COURSE MATERIAL:
 st.title("DOTTIE: Your Learning Assistant")
 
 st.caption(
-    "Ask questions about Python, data analysis, errors, code,"
+    "Ask questions about Python, data analysis, errors, code, "
     "and your course assignments."
 )
 
